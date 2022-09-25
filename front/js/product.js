@@ -123,7 +123,7 @@ function addBasket(product) {
 
 // message de confirmation : aller au panier
 function goToBasketConfirm() {
-    if (window.confirm("Votre produit a bien été ajouté au panier ! Pour consulter votre panier -> cliquez OK. Pour revoir tous les produits -> cliquez ANNULER.")) {
+    if (window.confirm("Votre produit a bien été ajouté au panier ! Pour consulter votre panier -> cliquez OK. Pour retourner au catalogue des produits -> cliquez ANNULER.")) {
         window.location.href = "cart.html"
     } else {
         window.location.href = "index.html"
