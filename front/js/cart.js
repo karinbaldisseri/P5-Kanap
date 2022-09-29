@@ -7,6 +7,7 @@
 
 let basket = JSON.parse(localStorage.getItem("basket"));
 let totalPrice = [];
+let apiUrl;
 /****************************
  * Déclaration des fonctions
  ****************************/
@@ -29,7 +30,7 @@ const getTotalPrice = (product, data) => {
     //console.log(price);
     totalPrice.push(price);
     //console.log(totalPrice);
-    totalAmount = totalPrice.reduce((acc, value) => acc + value, 0);
+    let totalAmount = totalPrice.reduce((acc, value) => acc + value, 0);
     //console.log(totalAmount);
     //const totalPrice = basket.reduce((totalPrice, product) => totalPrice + (itemPrice * product.quantity), 0);
     document.getElementById("totalPrice").textContent = totalAmount.toFixed(2);
@@ -70,7 +71,7 @@ function removeFromBasket(product, data) {
             }
         })
     });
-};
+}
 
 // Récupérer les données des produits depuis l'API
 // Duplication de code : idem script.js
@@ -147,3 +148,109 @@ const displayBasket = async () => {
 
 displayBasket();
 
+
+/********************************************************************************
+ * VALIDATION DU FORMULAIRE
+ ********************************************************************************/
+const form = document.querySelector(".cart__order__form");
+
+// Vérification du PRÉNOM au changement de l'input(RegExp)
+form.firstName.addEventListener('change', function() {
+    validFirstName(this);
+});
+const validFirstName = (inputFirstName) => {
+    let firstNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,25}$", 'gi');
+    let message = inputFirstName.nextElementSibling;
+    if (firstNameRegExp.test(inputFirstName.value)) {
+        message.textContent = "Prénom valide";
+        message.style.color = "#9BE700";
+        return true;
+    } else {
+        message.textContent = "Veuillez entrer un prénom valide : entre 2 et 20 caractères (sans chiffres ni caractères spéciaux)";
+        message.removeAttribute("style");
+        return false;
+    }
+};
+
+// Vérification du NOM au changement de l'input(RegExp)
+form.lastName.addEventListener('change', function() {
+    validLastName(this);
+});
+const validLastName = (inputLastName) => {
+    let lastNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,25}$", 'gi');
+    let message = inputLastName.nextElementSibling;
+    if (lastNameRegExp.test(inputLastName.value)) {
+        message.textContent = "Nom valide";
+        message.style.color = "#9BE700";
+        return true;
+    } else {
+        message.textContent = "Veuillez entrer un Nom valide : entre 2 et 25 caractères (sans chiffres)"
+        message.removeAttribute("style");
+        return false;
+    }
+};
+
+// Vérification de l'ADRESSE au changement de l'input(RegExp)
+form.address.addEventListener('change', function() {
+    validAddress(this);
+});
+const validAddress = (inputAddress) => {
+    let addressRegExp = new RegExp(`^[a-z0-9çéèêëàâîïôùû',"() -]{5,75}$`, 'gi');
+    let message = inputAddress.nextElementSibling;
+    if (addressRegExp.test(inputAddress.value)) {
+        message.textContent = "Adresse valide";
+        message.style.color = "#9BE700";
+        return true;
+    } else {
+        message.textContent = "Veuillez entrer une adresse valide : entre 5 et 100 caractères"
+        message.removeAttribute("style");
+        return false;
+    }
+};
+
+// Vérification de la VILLE au changement de l'input(RegExp)
+form.city.addEventListener('change', function() {
+    validCity(this);
+});
+const validCity = (inputCity) => {
+    let cityRegExp = new RegExp(`^[a-z0-9çéèêëàâîïôùû',"() -]{5,50}$`, 'gi');
+    let message = inputCity.nextElementSibling;
+    if (cityRegExp.test(inputCity.value)) {
+        message.textContent = "Ville valide";
+        message.style.color = "#9BE700";
+        return true;
+    } else {
+        message.textContent = "Veuillez entrer une ville valide : entre 5 et 50 caractères"
+        message.removeAttribute("style");
+        return false;
+    }
+};
+
+// Vérification de l'EMAIL au changement de l'input(RegExp)
+form.email.addEventListener('change', function() {
+    validEmail(this);
+});
+const validEmail = (inputEmail) => {
+    let emailRegExp = new RegExp('^[a-zA-Z0-9.-_]+[@]{1}[a-zA-Z0-9.-_]+[.]{1}[a-z]{2,10}$', 'g');
+    let message = inputEmail.nextElementSibling;
+    if (emailRegExp.test(inputEmail.value)) {
+        message.textContent = "Adresse email valide";
+        message.style.color = "#9BE700";
+        return true;
+    } else {
+        message.textContent = "Veuillez entrer une adresse email valide"
+        message.removeAttribute("style");
+        return false;
+    }
+};
+
+// Soumission du formulaire après vérification de la validité des données saisies
+form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (validFirstName(form.firstName) && validLastName(form.lastName) && validAddress(form.address)
+        && validCity(form.city) && validEmail(form.email)) {
+        form.submit();
+    } else {
+        alert("Votre commande n'a pas pu aboutir. Merci de vérifier les données du formulaire.")
+    }
+});
