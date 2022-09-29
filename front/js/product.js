@@ -14,8 +14,8 @@ const colorSelect = document.querySelector("#colors");
  * Déclaration des fonctions
  ****************************/
 
-// Création de l'image du produit
-function showImage(data) {
+// Création de l'élément : image du produit
+const showImage = (data) => {
     const itemImage = document.createElement("img");
     itemImage.src = data.imageUrl;
     itemImage.setAttribute("alt", `${data.altTxt}`);
@@ -23,7 +23,7 @@ function showImage(data) {
 };
 
 // Lier les données des produits aux éléments et sélecteurs respectifs
-function showInfo(data) {
+const showInfo = (data) => {
     document.title = data.name;
     document.querySelector("#title").textContent = data.name;
     document.querySelector("#price").textContent = data.price;
@@ -31,9 +31,9 @@ function showInfo(data) {
 }
 
 // Créer les options de couleur à la selection
-function colorOptions(data) {
+const colorOptions = (data) => {
     data.colors.forEach((color) => {
-        const option = new Option(`${color}`, `${color}`.toLowerCase());
+        const option = new Option(`${color}`, `${color}`);
         colorSelect.appendChild(option)
     })
 };
@@ -77,30 +77,31 @@ let product;
  ****************************/
 
 // Mettre à jour le panier dans LS
-function updateBasket(basket) {
+const updateBasket = (basket) => {
     localStorage.setItem("basket", JSON.stringify(basket));
 }
 
 // Récupérer le panier depuis LS
-function getBasket() {
+const getBasket = () => {
     basket = JSON.parse(localStorage.getItem("basket"));
     return basket;
 }
 
 // Vérifier validité des input couleur et quantité
-function checkValidity() {
+const checkValidity = (data) => {
     let quantity = document.querySelector("#quantity").value;
-    if (colorSelect.value == "") {
+    //let search = data.colors.find((x) => x.color !== colorSelect.value);
+    if (colorSelect.value === "" /*|| colorSelect.value !== data.colors -> find ?*/) {
         alert("Veuillez choisir une couleur dans la liste déroulante")
         return false;
-    } else if (quantity == null || quantity <= 0 || quantity > 100) {
+    } else if (quantity === null || quantity <= 0 || quantity > 100) {
         alert("Veuillez choisir une quantité entre 1 et 100")
         return false;
     }
 }
 
-// Ajouter un produit au panier
-function addBasket(product) {
+// Ajouter un produit au panier ou augmenter la quantité si produit déjà présent 
+const addBasket = (product) => {
     let basket = getBasket();
     product = {
             id: productId,
@@ -111,7 +112,7 @@ function addBasket(product) {
         basket = [];
         basket.push(product);
     } else {
-        let foundProduct = basket.find(p => p.id == product.id && p.color == product.color);
+        const foundProduct = basket.find(p => p.id == product.id && p.color == product.color);
         if (foundProduct != undefined) {
             foundProduct.quantity += product.quantity;
         } else {
@@ -121,8 +122,8 @@ function addBasket(product) {
     updateBasket(basket);
 }
 
-// message de confirmation : aller au panier
-function goToBasketConfirm() {
+// message de confirmation d'ajout au panier + aller au panier ou page d'accueil
+const goToBasketConfirm = () => {
     if (window.confirm("Votre produit a bien été ajouté au panier ! Pour consulter votre panier -> cliquez OK. Pour retourner au catalogue des produits -> cliquez ANNULER.")) {
         window.location.href = "cart.html"
     } else {
