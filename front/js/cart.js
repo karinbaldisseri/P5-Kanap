@@ -152,6 +152,7 @@ displayBasket();
 /********************************************************************************
  * VALIDATION DU FORMULAIRE
  ********************************************************************************/
+
 const form = document.querySelector(".cart__order__form");
 
 // Vérification du PRÉNOM au changement de l'input(RegExp)
@@ -159,7 +160,8 @@ form.firstName.addEventListener('change', function() {
     validFirstName(this);
 });
 const validFirstName = (inputFirstName) => {
-    let firstNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,25}$", 'gi');
+    let firstNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,25}$", 'gi'); 
+    // ou setatrribut pattern ?
     let message = inputFirstName.nextElementSibling;
     if (firstNameRegExp.test(inputFirstName.value)) {
         message.textContent = "Prénom valide";
@@ -248,9 +250,72 @@ const validEmail = (inputEmail) => {
 form.addEventListener('submit', function (e) {
     e.preventDefault();
     if (validFirstName(form.firstName) && validLastName(form.lastName) && validAddress(form.address)
-        && validCity(form.city) && validEmail(form.email)) {
-        form.submit();
+        && validCity(form.city) && validEmail(form.email) && form.reportValidity()) {
+        sendOrder();
+        console.log("envoyé");
     } else {
         alert("Votre commande n'a pas pu aboutir. Merci de vérifier les données du formulaire.")
     }
 });
+
+/********************************************************************************
+ * CRÉATION et vérification des DONNÉES pour commande
+ ********************************************************************************/
+
+// Création de l'objet Contact
+const createContact = () => {
+    const contactInfos = {
+        firstName: form.firstName.value,
+        lastName: form.lastName.value,
+        address: form.address.value,
+        city: form.city.value,
+        email: form.email.value,
+    };
+    console.log(contactInfos);
+    return contactInfos
+}
+
+// création du tableau Products
+const createProductIdsArray = () => {
+    const productIds = basket.map(product => product.id);
+    return productIds;
+}
+
+// creation de l'objet de commande incluant contact + products
+const createOrder = () => {
+    const contact = createContact();
+    const products = createProductIdsArray();
+    console.log(products);
+    if (products.length !== 0) {
+        const order = { contact, products };
+        console.log(order);
+        return order;
+    } else {
+        alert("Veuillez sélectionner des produits à commander");
+    }
+}
+
+// Envoi de données à l'API
+//const apiUrlPost = "http://localhost:3000/api/products/order";
+const sendOrder = () => {
+    let order = createOrder();
+    fetch("http://localhost:3000/api/products/order", {
+        method: "POST",
+        headers: {
+            //'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(order)
+    })
+        .then((response) => response.json()
+            .then((data) => {
+                console.log(data);
+                localStorage.clear();
+                window.location.href = `./confirmation.html?id=${data.orderId}`;
+            }))
+        .catch((error) => {
+            console.log('Erreur fetch : ' + error);
+            alert("Votre commande n'a PAS pu aboutir. Merci de vérifier votre commande et les données saisies.")
+        })
+}
+
