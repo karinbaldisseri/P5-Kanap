@@ -1,17 +1,13 @@
-/*******************************************************
- * Déclaration et initialisation des VARIABLES globales 
- *******************************************************/
-
-const itemsSection = document.getElementById("items");
-const apiUrl = "http://localhost:3000/api/products";
-let productId;
-
+/********************************************************************
+ * Affichage de tous les PRODUITS du catalogue (présents dans l'API)
+ ********************************************************************/
 /****************************
  * Déclaration des FONCTIONS
  ****************************/
 
-// Récupérer les données des produits depuis l'API
+// Récupérer les données de tous les produits depuis l'API
 const getProducts = async () => {
+    const apiUrl = "http://localhost:3000/api/products";
     try {
         const response = await fetch(apiUrl)
         if (response.ok) {
@@ -23,29 +19,22 @@ const getProducts = async () => {
         alert(e)
     }
 };
-
-// Rajouter Id du produit (paramètre) à URL
-function setParamId(product) {
-    const params = new URLSearchParams(window.location.search);
-    params.set('id', `${product._id}`);
-    productId = params.toString();
-};
     
-// Création de la carte produit
-function createProduct(product) {
-    setParamId(product);
+// Création de la carte produit 
+const createProduct = (product) => {
+    const itemsSection = document.getElementById("items");
     itemsSection.innerHTML += 
-    `<a href="./product.html?${productId}"> 
-        <article>
-            <img src="${product.imageUrl}" alt="${product.altTxt}">
-            <h3 class="productName">${product.name}</h3>
-            <p class="productDescription">${product.description}</p>
-        </article>
-    </a>`
+        `<a href="./product.html?id=${product._id}"> 
+            <article>
+                <img src="${product.imageUrl}" alt="${product.altTxt}">
+                <h3 class="productName">${product.name}</h3>
+                <p class="productDescription">${product.description}</p>
+            </article>
+        </a>`
 };
 
 // Affichage de tous les produits
-async function displayProducts() {
+const displayProducts = async () => {
     const products = await getProducts();
     for (let product of products) {
         createProduct(product)

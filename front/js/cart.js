@@ -1,61 +1,74 @@
 /********************************************************************************
- * Affichage du PANIER
+ * Affichage du PANIER avec détails des produits à commander
  ********************************************************************************/
 /*************************************
  * Déclaration des variables globales 
  *************************************/
 
-let basket = JSON.parse(localStorage.getItem("basket"));
-let totalPrice = [];
+let basket;
 let apiUrl;
+let apiDataForBasketProducts = [];
+
 /****************************
  * Déclaration des fonctions
  ****************************/
 
-// dupliquée de product.js
+// Mettre à jour le panier dans LS
 const updateBasket = (basket) => {
     localStorage.setItem("basket", JSON.stringify(basket));
-};
+}
+
+// Récupérer le panier depuis LS
+const getBasket = () => {
+    basket = JSON.parse(localStorage.getItem("basket"));
+    // regrouper produits par modèle à l'affichage
+    if (basket !== null) {
+        basket.sort((a, b) => a.id > b.id ? 1 : -1);
+    } 
+    return basket;
+}
+basket = getBasket();
 
 // Calcul et affichage de la quantité totale
 const getTotalQuantity = () => {
-    //const totalQuantity = basket.reduce((acc, item) => acc + item.quantity, 0);
     const totalQuantity = basket.map(item => item.quantity).reduce((acc, value) => acc + value, 0);
-    // MAIS sortir la fonction de la boucle ?
     document.getElementById("totalQuantity").textContent = totalQuantity;
 };
-    
-const getTotalPrice = (product, data) => {
-    const price = data.price * product.quantity;
-    //console.log(price);
-    totalPrice.push(price);
-    //console.log(totalPrice);
-    let totalAmount = totalPrice.reduce((acc, value) => acc + value, 0);
-    //console.log(totalAmount);
-    //const totalPrice = basket.reduce((totalPrice, product) => totalPrice + (itemPrice * product.quantity), 0);
-    document.getElementById("totalPrice").textContent = totalAmount.toFixed(2);
+
+// Calcul et affichage du prix total
+const getTotalPrice = () => {
+    let allPrices = [];
+    for (let item of basket) {
+        let unitPrice = apiDataForBasketProducts.find(element => element._id == item.id).price;
+        let totalPrice = unitPrice * item.quantity;
+        allPrices.push(totalPrice);
+        console.log(allPrices);
+    }
+        let totalAmount = allPrices.reduce((acc, value) => acc + value, 0);
+        document.getElementById("totalPrice").textContent = totalAmount.toFixed(2);
 };
 
-const updateQuantityInLs = (product, data) => {
+// Mise à jour de la quantité de chaque produit dans le Localstorage
+const updateQuantityInLs = () => {
     const quantityInputs = document.querySelectorAll(".itemQuantity");
-    //console.log(quantityInputs);
     quantityInputs.forEach((qtyInput) => {
         qtyInput.addEventListener("change", () => {
             let article = qtyInput.closest('article');
-            for (let item of basket) {
-                if (item.id === article.dataset.id && item.color === article.dataset.color) {
-                    item.quantity = parseInt(qtyInput.value);
+            qtyInput.value = (qtyInput.value < 1 || qtyInput.value > 100 || qtyInput.value === null) ? 1 : qtyInput.value;
+            for (let product of basket) {
+                if (product.id === article.dataset.id && product.color === article.dataset.color) {
+                    product.quantity = parseInt(qtyInput.value);
                     updateBasket(basket);
-                    location.reload();
+                    getTotalQuantity();
+                    getTotalPrice();
                 }
             } 
         })
     })
 };
 
-
 // Supprimer un produit du panier dans Ls
-function removeFromBasket(product, data) {
+function removeFromCart() {
     const deleteButtons = document.querySelectorAll(".deleteItem");
     deleteButtons.forEach((deleteBtn) => {
         deleteBtn.addEventListener("click", () => {
@@ -63,35 +76,23 @@ function removeFromBasket(product, data) {
                 let article = deleteBtn.closest('article');
                 basket = basket.filter((p) => !(p.id === article.dataset.id && p.color === article.dataset.color));
                 updateBasket(basket);
-                article.style.display = "none";
-                location.reload();
+                article.remove();
+                getTotalQuantity();
+                getTotalPrice();
             } else {
                 localStorage.clear();
-                estVide();
+                basketIsEmpty();
             }
         })
     });
 }
 
-// Récupérer les données des produits depuis l'API
-// Duplication de code : idem script.js
-const getProducts = async () => {
-    try {
-        const response = await fetch(apiUrl)
-        if (response.ok) {
-            return await response.json()
-        } else {
-            console.error('Retour du serveur : erreur', response.status)
-        }
-    } catch (e) {
-        alert(e)
-    }
-};
-
-//Création de l'<article> PRODUIT
+//Création de l'<article> PRODUIT pourb chacun des produits présents dans le panier LS
 const createProduct = (product, data) => {
-    document.getElementById("cart__items").innerHTML +=
-        `<article class="cart__item" data-id="${product.id}" data-color="${product.color}">
+    const search = data.colors.find(color => color === product.color)
+    if (search) {
+        document.getElementById("cart__items").innerHTML +=
+            `<article class="cart__item" data-id="${product.id}" data-color="${product.color}">
                 <div class="cart__item__img">
                     <img src="${data.imageUrl}" alt="${data.altTxt}">
                 </div>
@@ -112,35 +113,56 @@ const createProduct = (product, data) => {
                     </div>
                 </div>
             </article>`;
-    getTotalQuantity();
-    getTotalPrice(product, data);
+    } else {
+        const article = document.getElementsByClassName("cart__item");
+        basket = basket.filter((p) => !(p.id === product.id && p.color === product.color));
+        updateBasket(basket);
+    }
 };
 
-// si panier vide : ajouter "est vide" dans h1 
-const estVide = () => {
+// si panier vide : adapter la page panier
+const basketIsEmpty = () => {
     document.querySelector("h1").innerText += " est vide !"
     const cartSection = document.querySelector("section.cart");
-    cartSection.style.display = "none";
+    cartSection.remove();
     const cartContent = document.getElementById("cartAndFormContainer");
     const cartAncre = document.createElement("a");
     cartAncre.style = "color:white; text-align:center; display:block"
     cartAncre.setAttribute("href", "index.html");
     cartAncre.textContent = "Retourner au catalogue des produits";
-    cartContent.insertBefore(cartAncre, cartSection);
+    cartContent.appendChild(cartAncre);
 };
 
-// Affichage des PRODUITS du Panier
+// Récupérer les données de chacun des produits présent dans le panier(LS) depuis l'API
+const getProduct = async (productId) => {
+    try {
+        const response = await fetch(`http://localhost:3000/api/products/${productId}`)
+        if (response.ok) {
+            return await response.json()
+        } else {
+            console.error('Retour du serveur : erreur', response.status)
+        }
+    } catch (e) {
+        alert(e)
+    }
+};
+
+// Affichage des PRODUITS du Panier depuis LS
 const displayBasket = async () => {
-    if (basket == null || basket === undefined || basket === []) {
-        estVide();
+    if (basket == null || basket == undefined || basket == [] ) {
+        basketIsEmpty();
     } else {
         for (let product of basket) {
-            apiUrl = `http://localhost:3000/api/products/${product.id}`;
-            const data = await getProducts();
+            const data = await getProduct(product.id);
+            //console.log(data);
+            apiDataForBasketProducts.push(data);
+            //console.log(apiDataForBasketProducts);
             createProduct(product, data);
-            updateQuantityInLs(product, data);
-            removeFromBasket(product, data);
         }
+        getTotalQuantity();
+        getTotalPrice();
+        updateQuantityInLs();
+        removeFromCart();
     }
 };
 
@@ -152,16 +174,22 @@ displayBasket();
 /********************************************************************************
  * VALIDATION DU FORMULAIRE
  ********************************************************************************/
+/*************************************
+ * Déclaration des variables globales 
+ *************************************/
 
 const form = document.querySelector(".cart__order__form");
+
+/****************************
+ * Déclaration des fonctions
+ ****************************/
 
 // Vérification du PRÉNOM au changement de l'input(RegExp)
 form.firstName.addEventListener('change', function() {
     validFirstName(this);
 });
 const validFirstName = (inputFirstName) => {
-    let firstNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,25}$", 'gi'); 
-    // ou setatrribut pattern ?
+    let firstNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,20}$", 'gi'); 
     let message = inputFirstName.nextElementSibling;
     if (firstNameRegExp.test(inputFirstName.value)) {
         message.textContent = "Prénom valide";
@@ -176,7 +204,7 @@ const validFirstName = (inputFirstName) => {
 
 // Vérification du NOM au changement de l'input(RegExp)
 form.lastName.addEventListener('change', function() {
-    validLastName(this);
+    validFirstName(this);
 });
 const validLastName = (inputLastName) => {
     let lastNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,25}$", 'gi');
@@ -246,21 +274,12 @@ const validEmail = (inputEmail) => {
     }
 };
 
-// Soumission du formulaire après vérification de la validité des données saisies
-form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    if (validFirstName(form.firstName) && validLastName(form.lastName) && validAddress(form.address)
-        && validCity(form.city) && validEmail(form.email) && form.reportValidity()) {
-        sendOrder();
-        console.log("envoyé");
-    } else {
-        alert("Votre commande n'a pas pu aboutir. Merci de vérifier les données du formulaire.")
-    }
-});
-
 /********************************************************************************
  * CRÉATION et vérification des DONNÉES pour commande
  ********************************************************************************/
+/****************************
+ * Déclaration des fonctions
+ ****************************/
 
 // Création de l'objet Contact
 const createContact = () => {
@@ -271,12 +290,11 @@ const createContact = () => {
         city: form.city.value,
         email: form.email.value,
     };
-    console.log(contactInfos);
     return contactInfos
 }
 
 // création du tableau Products
-const createProductIdsArray = () => {
+const createProductIds = () => {
     const productIds = basket.map(product => product.id);
     return productIds;
 }
@@ -284,38 +302,46 @@ const createProductIdsArray = () => {
 // creation de l'objet de commande incluant contact + products
 const createOrder = () => {
     const contact = createContact();
-    const products = createProductIdsArray();
-    console.log(products);
+    const products = createProductIds();
     if (products.length !== 0) {
         const order = { contact, products };
-        console.log(order);
         return order;
     } else {
         alert("Veuillez sélectionner des produits à commander");
     }
 }
 
-// Envoi de données à l'API
-//const apiUrlPost = "http://localhost:3000/api/products/order";
+// Envoi des données à l'API
 const sendOrder = () => {
+    const apiUrlPost = "http://localhost:3000/api/products/order";
     let order = createOrder();
-    fetch("http://localhost:3000/api/products/order", {
+    fetch(apiUrlPost, {
         method: "POST",
         headers: {
-            //'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(order)
     })
         .then((response) => response.json()
             .then((data) => {
-                console.log(data);
                 localStorage.clear();
                 window.location.href = `./confirmation.html?id=${data.orderId}`;
             }))
         .catch((error) => {
-            console.log('Erreur fetch : ' + error);
+            console.error('Erreur fetch : ' + error);
             alert("Votre commande n'a PAS pu aboutir. Merci de vérifier votre commande et les données saisies.")
         })
 }
 
+/***************************************************************************************************/
+
+// Soumission du formulaire après vérification de la validité des données saisies
+form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (validFirstName(form.firstName) && validLastName(form.lastName) && validAddress(form.address)
+        && validCity(form.city) && validEmail(form.email) && form.reportValidity()) {
+        sendOrder();
+    } else {
+        alert("Votre commande n'a PAS pu aboutir. Merci de vérifier les données du formulaire.")
+    }
+});
