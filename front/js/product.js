@@ -7,7 +7,6 @@
 
 const params = new URLSearchParams(window.location.search);
 let productId;
-let apiUrl;
 const colorSelect = document.querySelector("#colors");
 
 /****************************
@@ -20,7 +19,7 @@ const createImage = (data) => {
     itemImage.src = data.imageUrl;
     itemImage.setAttribute("alt", `${data.altTxt}`);
     document.querySelector(".item__img").appendChild(itemImage);
-}
+};
 
 // Lier les données du produit aux éléments respectifs
 const showInfo = (data) => {
@@ -28,7 +27,7 @@ const showInfo = (data) => {
     document.querySelector("#title").textContent = data.name;
     document.querySelector("#price").textContent = data.price;
     document.querySelector("#description").textContent = data.description
-}
+};
 
 // Créer les options de couleur à la selection
 const createColorOptions = (data) => {
@@ -36,7 +35,7 @@ const createColorOptions = (data) => {
         const option = new Option(`${color}`, `${color}`);
         colorSelect.appendChild(option)
     })
-}
+};
 
 // Récupérer les données du produit depuis l'API
 async function displayProduct(productId) {
@@ -49,7 +48,7 @@ async function displayProduct(productId) {
             })
         )
         .catch((error) => console.error('Erreur : ' + error))
-}
+};
 
 /******************************************************************/
 
@@ -59,20 +58,12 @@ if (params.has('id')) {
     displayProduct(productId);
 } else {
     console.log("Impossible de trouver l'Id du produit")
-}
+};
 
 
 /********************************************************************************
  * Gestion du PANIER dans LOCALSTORAGE + Choix de la quantité et couleur
  ********************************************************************************/
-/*************************************
- * Déclaration des variables globales 
- *************************************/
-
-let product;
-// récupération du panier dans LS et assignation à la variable "basket"
-let basket = JSON.parse(localStorage.getItem("basket"));
-
 /****************************
  * Déclaration des fonctions
  ****************************/
@@ -80,27 +71,28 @@ let basket = JSON.parse(localStorage.getItem("basket"));
 // Mettre à jour le panier dans LS
 const updateBasket = (basket) => {
     localStorage.setItem("basket", JSON.stringify(basket));
-}
+};
 
 // Vérifier validité des input couleur et quantité
 const checkValidity = () => {
-    let quantity = document.querySelector("#quantity").value;
+    const quantity = document.querySelector("#quantity").value;
     if (colorSelect.value === "") {
         alert("Veuillez choisir une couleur dans la liste déroulante")
         return false;
     } else if (quantity === null || quantity <= 0 || quantity > 100) {
         alert("Veuillez choisir une quantité entre 1 et 100")
         return false;
-    } 
-}
+    }
+};
 
 // Ajouter un produit au panier ou augmenter la quantité si produit déjà présent 
 const addBasket = () => {
-    product = {
-            id: productId,
-            color: colorSelect.value,
-            quantity: parseInt(quantity.value)
-        };
+    const product = {
+        id: productId,
+        color: colorSelect.value,
+        quantity: parseInt(quantity.value)
+    }
+    let basket = JSON.parse(localStorage.getItem("basket"));
     if (basket == null) {
         basket = [];
         basket.push(product);
@@ -121,7 +113,7 @@ const addBasket = () => {
     }
     updateBasket(basket);
     goToCartConfirm();
-}
+};
 
 // message de confirmation d'ajout au panier + aller au panier ou page d'accueil
 const goToCartConfirm = () => {
@@ -130,17 +122,16 @@ const goToCartConfirm = () => {
     } else {
         window.location.href = "./index.html"
     }
-}
+};
 
 /******************************************************************/
-
 
 // Actions au click du bouton "Ajouter au panier"
 const button = document.querySelector("#addToCart");
 button.addEventListener("click", () => {
     if (checkValidity() === false) return;
     addBasket();
-})
+});
 
 
 

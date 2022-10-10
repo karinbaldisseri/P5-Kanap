@@ -5,8 +5,6 @@
  * Déclaration des variables globales 
  *************************************/
 
-let basket;
-let apiUrl;
 let apiDataForBasketProducts = [];
 
 /****************************
@@ -16,44 +14,45 @@ let apiDataForBasketProducts = [];
 // Mettre à jour le panier dans LS
 const updateBasket = (basket) => {
     localStorage.setItem("basket", JSON.stringify(basket));
-}
+};
 
 // Récupérer le panier depuis LS
 const getBasket = () => {
-    basket = JSON.parse(localStorage.getItem("basket"));
+    const basket = JSON.parse(localStorage.getItem("basket"));
     // regrouper produits par modèle à l'affichage
     if (basket !== null) {
         basket.sort((a, b) => a.id > b.id ? 1 : -1);
-    } 
+    }
     return basket;
-}
-basket = getBasket();
+};
 
 // Calcul et affichage de la quantité totale
 const getTotalQuantity = () => {
+    const basket = getBasket();
     const totalQuantity = basket.map(item => item.quantity).reduce((acc, value) => acc + value, 0);
     document.getElementById("totalQuantity").textContent = totalQuantity;
 };
 
 // Calcul et affichage du prix total
 const getTotalPrice = () => {
+    const basket = getBasket();
     let allPrices = [];
     for (let item of basket) {
-        let unitPrice = apiDataForBasketProducts.find(element => element._id == item.id).price;
-        let totalPrice = unitPrice * item.quantity;
+        const unitPrice = apiDataForBasketProducts.find(element => element._id == item.id).price;
+        const totalPrice = unitPrice * item.quantity;
         allPrices.push(totalPrice);
-        console.log(allPrices);
     }
-        let totalAmount = allPrices.reduce((acc, value) => acc + value, 0);
+        const totalAmount = allPrices.reduce((acc, value) => acc + value, 0);
         document.getElementById("totalPrice").textContent = totalAmount.toFixed(2);
 };
 
 // Mise à jour de la quantité de chaque produit dans le Localstorage
 const updateQuantityInLs = () => {
+    const basket = getBasket();
     const quantityInputs = document.querySelectorAll(".itemQuantity");
     quantityInputs.forEach((qtyInput) => {
         qtyInput.addEventListener("change", () => {
-            let article = qtyInput.closest('article');
+            const article = qtyInput.closest('article');
             qtyInput.value = (qtyInput.value < 1 || qtyInput.value > 100 || qtyInput.value === null) ? 1 : qtyInput.value;
             for (let product of basket) {
                 if (product.id === article.dataset.id && product.color === article.dataset.color) {
@@ -69,11 +68,12 @@ const updateQuantityInLs = () => {
 
 // Supprimer un produit du panier dans Ls
 function removeFromCart() {
+    let basket = getBasket();
     const deleteButtons = document.querySelectorAll(".deleteItem");
     deleteButtons.forEach((deleteBtn) => {
         deleteBtn.addEventListener("click", () => {
             if (basket.length > 1) {
-                let article = deleteBtn.closest('article');
+                const article = deleteBtn.closest('article');
                 basket = basket.filter((p) => !(p.id === article.dataset.id && p.color === article.dataset.color));
                 updateBasket(basket);
                 article.remove();
@@ -84,8 +84,8 @@ function removeFromCart() {
                 basketIsEmpty();
             }
         })
-    });
-}
+    })
+};
 
 //Création de l'<article> PRODUIT pourb chacun des produits présents dans le panier LS
 const createProduct = (product, data) => {
@@ -115,6 +115,7 @@ const createProduct = (product, data) => {
             </article>`;
     } else {
         const article = document.getElementsByClassName("cart__item");
+        let basket = getBasket();
         basket = basket.filter((p) => !(p.id === product.id && p.color === product.color));
         updateBasket(basket);
     }
@@ -149,14 +150,13 @@ const getProduct = async (productId) => {
 
 // Affichage des PRODUITS du Panier depuis LS
 const displayBasket = async () => {
-    if (basket == null || basket == undefined || basket == [] ) {
+    const basket = getBasket();
+    if (basket === null || basket === undefined || basket === [] ) {
         basketIsEmpty();
     } else {
         for (let product of basket) {
             const data = await getProduct(product.id);
-            //console.log(data);
             apiDataForBasketProducts.push(data);
-            //console.log(apiDataForBasketProducts);
             createProduct(product, data);
         }
         getTotalQuantity();
@@ -189,8 +189,8 @@ form.firstName.addEventListener('change', function() {
     validFirstName(this);
 });
 const validFirstName = (inputFirstName) => {
-    let firstNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,20}$", 'gi'); 
-    let message = inputFirstName.nextElementSibling;
+    const firstNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,20}$", 'gi'); 
+    const message = inputFirstName.nextElementSibling;
     if (firstNameRegExp.test(inputFirstName.value)) {
         message.textContent = "Prénom valide";
         message.style.color = "#9BE700";
@@ -207,8 +207,8 @@ form.lastName.addEventListener('change', function() {
     validFirstName(this);
 });
 const validLastName = (inputLastName) => {
-    let lastNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,25}$", 'gi');
-    let message = inputLastName.nextElementSibling;
+    const lastNameRegExp = new RegExp("^[a-zçéèêëàâîïôùû' -]{2,25}$", 'gi');
+    const message = inputLastName.nextElementSibling;
     if (lastNameRegExp.test(inputLastName.value)) {
         message.textContent = "Nom valide";
         message.style.color = "#9BE700";
@@ -225,8 +225,8 @@ form.address.addEventListener('change', function() {
     validAddress(this);
 });
 const validAddress = (inputAddress) => {
-    let addressRegExp = new RegExp(`^[a-z0-9çéèêëàâîïôùû',"() -]{5,75}$`, 'gi');
-    let message = inputAddress.nextElementSibling;
+    const addressRegExp = new RegExp(`^[a-z0-9çéèêëàâîïôùû',"() -]{5,75}$`, 'gi');
+    const message = inputAddress.nextElementSibling;
     if (addressRegExp.test(inputAddress.value)) {
         message.textContent = "Adresse valide";
         message.style.color = "#9BE700";
@@ -243,8 +243,8 @@ form.city.addEventListener('change', function() {
     validCity(this);
 });
 const validCity = (inputCity) => {
-    let cityRegExp = new RegExp(`^[a-z0-9çéèêëàâîïôùû',"() -]{5,50}$`, 'gi');
-    let message = inputCity.nextElementSibling;
+    const cityRegExp = new RegExp(`^[a-z0-9çéèêëàâîïôùû',"() -]{5,50}$`, 'gi');
+    const message = inputCity.nextElementSibling;
     if (cityRegExp.test(inputCity.value)) {
         message.textContent = "Ville valide";
         message.style.color = "#9BE700";
@@ -261,8 +261,8 @@ form.email.addEventListener('change', function() {
     validEmail(this);
 });
 const validEmail = (inputEmail) => {
-    let emailRegExp = new RegExp('^[a-zA-Z0-9.-_]+[@]{1}[a-zA-Z0-9.-_]+[.]{1}[a-z]{2,10}$', 'g');
-    let message = inputEmail.nextElementSibling;
+    const emailRegExp = new RegExp('^[a-zA-Z0-9.-_]+[@]{1}[a-zA-Z0-9.-_]+[.]{1}[a-z]{2,10}$', 'g');
+    const message = inputEmail.nextElementSibling;
     if (emailRegExp.test(inputEmail.value)) {
         message.textContent = "Adresse email valide";
         message.style.color = "#9BE700";
@@ -289,15 +289,16 @@ const createContact = () => {
         address: form.address.value,
         city: form.city.value,
         email: form.email.value,
-    };
+    }
     return contactInfos
-}
+};
 
 // création du tableau Products
 const createProductIds = () => {
+    const basket = getBasket();
     const productIds = basket.map(product => product.id);
     return productIds;
-}
+};
 
 // creation de l'objet de commande incluant contact + products
 const createOrder = () => {
@@ -309,12 +310,12 @@ const createOrder = () => {
     } else {
         alert("Veuillez sélectionner des produits à commander");
     }
-}
+};
 
 // Envoi des données à l'API
 const sendOrder = () => {
     const apiUrlPost = "http://localhost:3000/api/products/order";
-    let order = createOrder();
+    const order = createOrder();
     fetch(apiUrlPost, {
         method: "POST",
         headers: {
@@ -331,7 +332,7 @@ const sendOrder = () => {
             console.error('Erreur fetch : ' + error);
             alert("Votre commande n'a PAS pu aboutir. Merci de vérifier votre commande et les données saisies.")
         })
-}
+};
 
 /***************************************************************************************************/
 

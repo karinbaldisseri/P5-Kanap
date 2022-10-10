@@ -7,4 +7,4 @@ if (params.has('id')) {
     document.getElementById("orderId").textContent = orderId;
 } else {
     console.log("Impossible de trouver le numéro de commande")
-}
+};
