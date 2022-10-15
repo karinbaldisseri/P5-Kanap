@@ -48,12 +48,12 @@ const getTotalPrice = () => {
 
 // Mise à jour de la quantité de chaque produit dans le Localstorage
 const updateQuantityInLs = () => {
-    const basket = getBasket();
     const quantityInputs = document.querySelectorAll(".itemQuantity");
     quantityInputs.forEach((qtyInput) => {
         qtyInput.addEventListener("change", () => {
             const article = qtyInput.closest('article');
             qtyInput.value = (qtyInput.value < 1 || qtyInput.value > 100 || qtyInput.value === null) ? 1 : qtyInput.value;
+            let basket = getBasket();
             for (let product of basket) {
                 if (product.id === article.dataset.id && product.color === article.dataset.color) {
                     product.quantity = parseInt(qtyInput.value);
@@ -68,17 +68,17 @@ const updateQuantityInLs = () => {
 
 // Supprimer un produit du panier dans Ls
 function removeFromCart() {
-    let basket = getBasket();
     const deleteButtons = document.querySelectorAll(".deleteItem");
     deleteButtons.forEach((deleteBtn) => {
         deleteBtn.addEventListener("click", () => {
+            let basket = getBasket();
             if (basket.length > 1) {
                 const article = deleteBtn.closest('article');
                 basket = basket.filter((p) => !(p.id === article.dataset.id && p.color === article.dataset.color));
-                updateBasket(basket);
                 article.remove();
                 getTotalQuantity();
                 getTotalPrice();
+                updateBasket(basket);
             } else {
                 localStorage.clear();
                 basketIsEmpty();
